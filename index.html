@@ -292,6 +292,13 @@ body.redigerar [contenteditable="true"]{outline:1.5px dashed rgba(196,58,46,.55)
   box-shadow:0 6px 20px rgba(0,0,0,.45);max-width:92vw;
 }
 body.redigerar .redigera-hint{display:block}
+.spar-toast{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-12px);
+  color:#fff;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.05em;
+  padding:10px 18px;border-radius:99px;z-index:30;opacity:0;pointer-events:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.45);transition:opacity .2s, transform .2s;
+}
+.spar-toast.visa{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ============ SVG-animationer ============ */
 .smoke{animation:rok 5s ease-in-out infinite}
@@ -337,9 +344,9 @@ body.redigerar .redigera-hint{display:block}
   <div class="hazard"></div>
   <div class="redigera-kontroller">
     <button class="redigera-knapp" id="redigeraToggle" title="Redigera all text" aria-label="Redigera all text">✎</button>
-    <button class="redigera-knapp" id="sparaKopia" title="Ladda ner redigerad kopia" aria-label="Ladda ner redigerad kopia" hidden="">💾</button>
+    <button class="redigera-knapp" id="sparaKopia" title="Spara — skriv över index.html" aria-label="Spara — skriv över filen" hidden="">💾</button>
   </div>
-  <div class="redigera-hint">REDIGERINGSLÄGE — klicka på text och skriv · 📷 byter före/efter-bilder · ✓ låser · 💾 laddar ner er version</div>
+  <div class="redigera-hint">REDIGERINGSLÄGE — klicka på text och skriv · 📷 byter före/efter-bilder · ✓ låser · 💾 sparar direkt till filen</div>
   <div class="inner">
 
     <!-- DOKUMENTHUVUD -->
@@ -1089,19 +1096,98 @@ body.redigerar .redigera-hint{display:block}
 
   toggle.addEventListener('click', function(){ sattLage(!aktiv); });
 
-  spara.addEventListener('click', function(){
-    var varAktiv = aktiv;
-    sattLage(false); // lås innan serialisering så kopian öppnas i låst läge
-    var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  // Litet toast-meddelande för spar-status
+  var toast;
+  function visaToast(msg, fel){
+    if (!toast){
+      toast = document.createElement('div');
+      toast.className = 'spar-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.background = fel ? '#c43a2e' : '#1e7d3a';
+    toast.classList.add('visa');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ toast.classList.remove('visa'); }, 2800);
+  }
+
+  // Persistera fil-handtaget i IndexedDB så samma fil skrivs över nästa gång
+  var DB = 'byggardag', STORE = 'handtag', NYCKEL = 'index-html';
+  function dbOppna(){
+    return new Promise(function(res, rej){
+      var r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore(STORE); };
+      r.onsuccess = function(){ res(r.result); };
+      r.onerror = function(){ rej(r.error); };
+    });
+  }
+  function dbHamta(){
+    return dbOppna().then(function(db){
+      return new Promise(function(res){
+        var q = db.transaction(STORE, 'readonly').objectStore(STORE).get(NYCKEL);
+        q.onsuccess = function(){ res(q.result || null); };
+        q.onerror = function(){ res(null); };
+      });
+    }).catch(function(){ return null; });
+  }
+  function dbSpara(handle){
+    return dbOppna().then(function(db){
+      db.transaction(STORE, 'readwrite').objectStore(STORE).put(handle, NYCKEL);
+    }).catch(function(){});
+  }
+
+  function byggHtml(){
+    return '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  }
+  function laddaNer(html){
     var blob = new Blob([html], {type:'text/html;charset=utf-8'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'byggardag-inbjudan.html';
+    a.download = 'index.html';
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
-    if (varAktiv) sattLage(true);
+  }
+  async function harSkrivlov(handle){
+    var opts = {mode:'readwrite'};
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    return (await handle.requestPermission(opts)) === 'granted';
+  }
+  async function skrivTillFil(html){
+    var handle = await dbHamta();
+    if (handle && !(await harSkrivlov(handle))) handle = null;
+    if (!handle){
+      handle = await window.showSaveFilePicker({
+        suggestedName: 'index.html',
+        types: [{description: 'HTML', accept: {'text/html': ['.html']}}]
+      });
+      await dbSpara(handle);
+    }
+    var skrivare = await handle.createWritable();
+    await skrivare.write(html);
+    await skrivare.close();
+    return handle.name;
+  }
+
+  spara.addEventListener('click', function(){
+    var varAktiv = aktiv;
+    sattLage(false); // lås innan serialisering så filen sparas i låst läge
+    var html = byggHtml();
+    function aterstall(){ if (varAktiv) sattLage(true); }
+    if (window.showSaveFilePicker){
+      skrivTillFil(html).then(function(namn){
+        visaToast('Sparat till ' + namn + ' ✓');
+      }).catch(function(err){
+        if (err && err.name === 'AbortError') return; // användaren avbröt filväljaren
+        laddaNer(html);
+        visaToast('Kunde inte skriva direkt — laddade ner index.html i stället', true);
+      }).then(aterstall);
+    } else {
+      laddaNer(html);
+      visaToast('Nedladdad som index.html ✓');
+      aterstall();
+    }
   });
 })();
 </script>
