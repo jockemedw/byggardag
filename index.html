@@ -1107,9 +1107,15 @@ body.redigerar .redigera-hint{display:block}
           visa('');
           knapp.textContent = 'Skickat ✓';
           tack.hidden = false;
-        } else {
-          throw new Error('FormSubmit svarade utan success');
+          return;
         }
+        // FormSubmit kräver att adressen aktiveras en gång (engångssteg hos värdparet)
+        if (d && /activ/i.test(d.message || '')){
+          knapp.disabled = false;
+          visa('Formuläret aktiveras just nu — prova igen om en liten stund.', true);
+          return;
+        }
+        throw new Error('FormSubmit svarade utan success');
       })
       .catch(function(){
         knapp.disabled = false;
