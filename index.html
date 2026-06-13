@@ -254,6 +254,18 @@ table.risk td:first-child{font-family:"IBM Plex Mono",ui-monospace,monospace;fon
   padding:10px;resize:vertical;color:var(--ink);
 }
 .kopierat{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:#2c7a3f;margin-left:10px;font-weight:600}
+.kopierat.fel{color:var(--stampel)}
+.osa-falt{
+  width:100%;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+  border:1.5px solid var(--ink);background:#fff;padding:9px 11px;color:var(--ink);
+  margin:0 0 10px;border-radius:2px;
+}
+.osa-falt:focus{outline:2px solid var(--gul);outline-offset:0}
+.osa-falt::placeholder{color:#9a958688}
+.osa-tack{
+  margin-top:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+  font-weight:600;color:#1e7d3a;line-height:1.6;
+}
 
 /* ============ RITNINGSSTÄMPEL (footer) ============ */
 .titleblock{margin-top:clamp(36px,6vw,64px);border:2.5px solid var(--ink)}
@@ -909,28 +921,37 @@ body.redigerar .redigera-hint{display:block}
         </div>
         <div>
           <h3>Intresseanmälan</h3>
-          <p class="chiplabel">Vilka dagar kan du?</p>
-          <div class="chips" id="dagChips">
-            <button class="chip" data-dag="lör 27/6">Lör 27/6</button>
-            <button class="chip" data-dag="sön 28/6">Sön 28/6</button>
-            <button class="chip" data-dag="lör 11/7">Lör 11/7</button>
-            <button class="chip" data-dag="sön 12/7">Sön 12/7</button>
-          </div>
-          <p class="chiplabel">Vad lockar? (oförpliktigande)</p>
-          <div class="chips" id="chips">
-            <button class="chip" data-ap="AP1 Mätning">AP1 Mätning</button>
-            <button class="chip" data-ap="AP2 Minigrävare ★">AP2 Minigrävare ★</button>
-            <button class="chip" data-ap="AP3 Skottkärra">AP3 Skottkärra</button>
-            <button class="chip" data-ap="AP4 Markduk">AP4 Markduk</button>
-            <button class="chip" data-ap="AP5 Plattor">AP5 Plattor</button>
-            <button class="chip" data-ap="AP6 Trallmontage">AP6 Trall</button>
-            <button class="chip" data-ap="Moraliskt stöd &amp; hejarramsor">Moraliskt stöd &amp; hejarramsor</button>
-          </div>
-          <button class="knapp" id="skapaSvar">Skapa mitt OSA-svar</button>
-          <span class="kopierat" id="kopierat" hidden="">Kopierat ✓</span>
-          <div class="svarsruta" id="svarsruta">
-            <textarea id="svarsText" readonly=""></textarea>
-          </div>
+          <form id="osaForm" class="osa-form" action="https://formsubmit.co/joakimweimar@gmail.com" method="POST" novalidate="">
+            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+            <p class="chiplabel">Vilka dagar kan du?</p>
+            <div class="chips" id="dagChips">
+              <button type="button" class="chip" data-dag="lör 27/6">Lör 27/6</button>
+              <button type="button" class="chip" data-dag="sön 28/6">Sön 28/6</button>
+              <button type="button" class="chip" data-dag="lör 11/7">Lör 11/7</button>
+              <button type="button" class="chip" data-dag="sön 12/7">Sön 12/7</button>
+            </div>
+            <p class="chiplabel">Vad lockar? (oförpliktigande)</p>
+            <div class="chips" id="chips">
+              <button type="button" class="chip" data-ap="AP1 Mätning">AP1 Mätning</button>
+              <button type="button" class="chip" data-ap="AP2 Minigrävare ★">AP2 Minigrävare ★</button>
+              <button type="button" class="chip" data-ap="AP3 Skottkärra">AP3 Skottkärra</button>
+              <button type="button" class="chip" data-ap="AP4 Markduk">AP4 Markduk</button>
+              <button type="button" class="chip" data-ap="AP5 Plattor">AP5 Plattor</button>
+              <button type="button" class="chip" data-ap="AP6 Trallmontage">AP6 Trall</button>
+              <button type="button" class="chip" data-ap="Moraliskt stöd &amp; hejarramsor">Moraliskt stöd &amp; hejarramsor</button>
+            </div>
+            <p class="chiplabel">Vem är det ifrån?</p>
+            <input class="osa-falt" type="text" name="Namn" id="osaNamn" placeholder="Ditt namn" autocomplete="name" required="">
+            <input class="osa-falt" type="text" name="Kontakt" id="osaKontakt" placeholder="Mobil eller mejl (valfritt)" autocomplete="off">
+            <input type="hidden" name="Dagar" id="osaDagar">
+            <input type="hidden" name="Arbetspaket" id="osaAP">
+            <input type="hidden" name="_subject" value="Byggardag OSA">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_captcha" value="false">
+            <button class="knapp" type="submit" id="skickaOsa">Skicka mitt OSA</button>
+            <span class="kopierat" id="osaStatus" hidden=""></span>
+            <p class="osa-tack" id="osaTack" hidden="">Tack — ditt svar är skickat ✓<br>Vi ses på byggardagen! 🛠️</p>
+          </form>
         </div>
       </div>
     </section>
@@ -1018,53 +1039,82 @@ body.redigerar .redigera-hint{display:block}
   });
 })();
 
-// ---- Chips + OSA-svar ----
+// ---- Chips + OSA-formulär (skickas via FormSubmit -> mejl) ----
 (function(){
-  var chips = document.querySelectorAll('.chips .chip');
-  chips.forEach(function(c){
+  // Mottagaradress. Byt ev. till en hashad alias från FormSubmit för att dölja mejlen.
+  var MOTTAGARE = 'joakimweimar@gmail.com';
+
+  document.querySelectorAll('.chips .chip').forEach(function(c){
     c.addEventListener('click', function(){
       if (document.body.classList.contains('redigerar')) return;
       c.classList.toggle('vald');
     });
   });
 
-  var knapp = document.getElementById('skapaSvar');
-  var ruta = document.getElementById('svarsruta');
-  var text = document.getElementById('svarsText');
-  var kopierat = document.getElementById('kopierat');
+  var form = document.getElementById('osaForm');
+  if (!form) return;
+  var namnInput = document.getElementById('osaNamn');
+  var kontaktInput = document.getElementById('osaKontakt');
+  var dagarInput = document.getElementById('osaDagar');
+  var apInput = document.getElementById('osaAP');
+  var knapp = document.getElementById('skickaOsa');
+  var status = document.getElementById('osaStatus');
+  var tack = document.getElementById('osaTack');
+  var statusTimer;
 
-  knapp.addEventListener('click', function(){
+  function visa(msg, fel){
+    status.textContent = msg;
+    status.classList.toggle('fel', !!fel);
+    status.hidden = !msg;
+    clearTimeout(statusTimer);
+    if (msg && !fel) statusTimer = setTimeout(function(){ status.hidden = true; }, 3000);
+  }
+
+  function valda(selektor){
+    return Array.prototype.slice.call(document.querySelectorAll(selektor))
+      .map(function(c){ return c.textContent.trim(); });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
     if (document.body.classList.contains('redigerar')) return;
-    var dagar = Array.prototype.slice.call(document.querySelectorAll('#dagChips .chip.vald'))
-      .map(function(c){ return c.textContent.trim(); });
-    var valda = Array.prototype.slice.call(document.querySelectorAll('#chips .chip.vald'))
-      .map(function(c){ return c.textContent.trim(); });
-    var rader = 'Hej! Jag kommer på byggardagarna 🛠️';
-    if (dagar.length){
-      rader += '\nJag kan: ' + dagar.join(', ') + '.';
-    }
-    if (valda.length){
-      rader += '\nJag anmäler intresse för: ' + valda.join(', ') + '.';
-    } else {
-      rader += '\nSätt mig där jag behövs (eller vid grillen).';
-    }
-    rader += '\nHälsningar [DITT NAMN]';
-    text.value = rader;
-    ruta.classList.add('visa');
-    text.focus();
-    text.select();
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(rader).then(function(){
-          kopierat.hidden = false;
-          setTimeout(function(){ kopierat.hidden = true; }, 2200);
-        });
-      } else {
-        document.execCommand('copy');
-        kopierat.hidden = false;
-        setTimeout(function(){ kopierat.hidden = true; }, 2200);
-      }
-    } catch(e){ /* användaren kan kopiera manuellt */ }
+
+    var namn = (namnInput.value || '').trim();
+    if (!namn){ visa('Fyll i ditt namn först', true); namnInput.focus(); return; }
+
+    var dagar = valda('#dagChips .chip.vald');
+    var ap = valda('#chips .chip.vald');
+    dagarInput.value = dagar.length ? dagar.join(', ') : 'Inga dagar valda';
+    apInput.value = ap.length ? ap.join(', ') : 'Sätt mig där jag behövs (eller vid grillen)';
+
+    knapp.disabled = true;
+    visa('Skickar…');
+
+    fetch('https://formsubmit.co/ajax/' + MOTTAGARE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: 'Byggardag OSA: ' + namn,
+        _template: 'table',
+        Namn: namn,
+        Kontakt: (kontaktInput.value || '').trim() || '—',
+        Dagar: dagarInput.value,
+        Arbetspaket: apInput.value
+      })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && (d.success === 'true' || d.success === true)){
+          visa('');
+          knapp.textContent = 'Skickat ✓';
+          tack.hidden = false;
+        } else {
+          throw new Error('FormSubmit svarade utan success');
+        }
+      })
+      .catch(function(){
+        knapp.disabled = false;
+        visa('Kunde inte skicka — försök igen eller mejla ' + MOTTAGARE, true);
+      });
   });
 })();
 
