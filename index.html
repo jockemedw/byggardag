@@ -953,7 +953,7 @@ body.redigerar .redigera-hint{display:block}
           <h3>Intresseanmälan</h3>
           <form id="osaForm" class="osa-form" action="https://formsubmit.co/597bb912ffe7a45615b374932cc739ab" method="POST" novalidate="">
             <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-            <p class="chiplabel">Vilka dagar kan du?</p>
+            <p class="chiplabel">Vilka dagar kan du? (välj minst en)</p>
             <div class="chips" id="dagChips">
               <button type="button" class="chip" data-dag="lör 27/6">Lör 27/6</button>
               <button type="button" class="chip" data-dag="sön 28/6">Sön 28/6</button>
@@ -983,7 +983,7 @@ body.redigerar .redigera-hint{display:block}
               <option value="5+ – helt arbetslag">5+ – helt arbetslag</option>
             </select>
             <p class="chiplabel">Kontakt</p>
-            <input class="osa-falt" type="text" name="Kontakt" id="osaKontakt" placeholder="Mobil eller mejl (valfritt)" autocomplete="off">
+            <input class="osa-falt" type="text" name="Kontakt" id="osaKontakt" placeholder="Mobil eller mejl" autocomplete="off" required="">
             <input type="hidden" name="Dagar" id="osaDagar">
             <input type="hidden" name="Arbetspaket" id="osaAP">
             <input type="hidden" name="_subject" value="Byggardag OSA">
@@ -1124,9 +1124,17 @@ body.redigerar .redigera-hint{display:block}
     var namn = (namnInput.value || '').trim();
     if (!namn){ visa('Fyll i ditt namn först', true); namnInput.focus(); return; }
 
+    var kontakt = (kontaktInput.value || '').trim();
+    if (!kontakt){ visa('Fyll i en kontaktuppgift (mobil eller mejl)', true); kontaktInput.focus(); return; }
+
     var dagar = valda('#dagChips .chip.vald');
+    if (!dagar.length){
+      visa('Välj minst en dag du kan', true);
+      document.getElementById('dagChips').scrollIntoView({block:'center'});
+      return;
+    }
     var ap = valda('#chips .chip.vald');
-    dagarInput.value = dagar.length ? dagar.join(', ') : 'Inga dagar valda';
+    dagarInput.value = dagar.join(', ');
     apInput.value = ap.length ? ap.join(', ') : 'Sätt mig där jag behövs (eller vid grillen)';
 
     knapp.disabled = true;
@@ -1141,7 +1149,7 @@ body.redigerar .redigera-hint{display:block}
         Namn: namn,
         Medföljande: (medfInput.value || '').trim() || '—',
         Antal: antalSelect.value,
-        Kontakt: (kontaktInput.value || '').trim() || '—',
+        Kontakt: kontakt,
         Dagar: dagarInput.value,
         Arbetspaket: apInput.value
       })
