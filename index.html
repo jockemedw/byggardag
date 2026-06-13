@@ -167,12 +167,13 @@ body.redigerar .compare .badge{pointer-events:auto}
   font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;font-weight:600;
   letter-spacing:.14em;text-transform:uppercase;color:#6a6555;margin-bottom:5px;
 }
-.fakta dd{font-size:14.5px;line-height:1.45;font-weight:500}
+.fakta dd{font-size:14.5px;line-height:1.45;font-weight:500;overflow-wrap:break-word}
+.fakta dt{overflow-wrap:break-word}
 
 /* ============ ARBETSPAKET ============ */
 .ap{border:2px solid var(--ink)}
 .ap-rad{
-  display:grid;grid-template-columns:86px 1fr auto;align-items:center;gap:16px;
+  display:grid;grid-template-columns:86px minmax(0,1fr) auto;align-items:center;gap:16px;
   padding:15px 18px;border-bottom:1px solid var(--linje);background:var(--paper);
 }
 .ap-rad:last-child{border-bottom:none}
@@ -181,8 +182,8 @@ body.redigerar .compare .badge{pointer-events:auto}
   font-family:"Anton",Impact,sans-serif;font-size:30px;line-height:1;color:var(--ink);
 }
 .ap-rad.stjarna .ap-nr::after{content:" ★";font-size:.55em;vertical-align:.45em}
-.ap-titel{font-weight:700;font-size:15.5px;text-transform:uppercase;letter-spacing:.04em}
-.ap-desc{font-size:13.5px;line-height:1.5;color:#3c3a30;margin-top:3px}
+.ap-titel{font-weight:700;font-size:15.5px;text-transform:uppercase;letter-spacing:.04em;overflow-wrap:break-word}
+.ap-desc{font-size:13.5px;line-height:1.5;color:#3c3a30;margin-top:3px;overflow-wrap:break-word}
 .ap-rad.stjarna .ap-desc{color:#33301f}
 .tag{
   font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;font-weight:600;
@@ -338,14 +339,42 @@ body.redigerar .redigera-hint{display:block}
   .fakta>div:nth-last-child(-n+2){border-bottom:none}
   .prakt{grid-template-columns:1fr}
   .prakt>div:first-child{border-right:none;border-bottom:1px solid var(--linje)}
-  .ap-rad{grid-template-columns:56px 1fr;}
-  .ap-rad .tag{grid-column:2;justify-self:start;margin-top:2px}
+  .ap-rad{grid-template-columns:56px minmax(0,1fr);}
+  .ap-rad .tag{grid-column:2;justify-self:start;margin-top:2px;white-space:normal}
   .ap-nr{font-size:24px}
   .tb-rad{grid-template-columns:1fr 1fr}
   .tb-cell:nth-child(2){border-right:none}
   .tb-cell{border-bottom:0}
   .tb-rad{border-bottom:1.5px solid var(--ink)}
   .stamp{position:static;display:inline-block;margin-top:18px;animation-delay:.2s}
+}
+@media (max-width:400px){
+  /* Projektfakta i en kolumn på riktigt smala skärmar */
+  .fakta{grid-template-columns:1fr}
+  .fakta>div,
+  .fakta>div:nth-child(2n),
+  .fakta>div:nth-child(3n){border-right:none;border-bottom:1px solid var(--linje)}
+  .fakta>div:last-child{border-bottom:none}
+}
+@media (max-width:520px){
+  /* Risktabellen blir staplade kort så inget kapas på smal skärm */
+  table.risk{border:none;font-size:14px}
+  table.risk thead{display:none}
+  table.risk tr{display:block;border:2px solid var(--ink);margin-bottom:12px;padding:12px 14px}
+  table.risk tr:last-child{margin-bottom:0}
+  table.risk td{display:block;border:none;padding:0;line-height:1.5}
+  table.risk td:first-child{
+    display:inline-block;
+    font-family:"Anton",Impact,sans-serif;font-size:18px;letter-spacing:.04em;
+    color:var(--paper);background:var(--ink);padding:2px 11px 1px;margin-bottom:8px;
+  }
+  table.risk td:not(:first-child){margin-top:8px}
+  table.risk td:not(:first-child)::before{
+    content:attr(data-label);display:block;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:#6a6555;margin-bottom:1px;
+  }
+  table.risk td.niv{white-space:normal}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none !important;transition:none !important}
@@ -681,33 +710,33 @@ body.redigerar .redigera-hint{display:block}
         <tbody>
           <tr>
             <td>R1</td>
-            <td>Ingen vill lämna minigrävaren</td>
-            <td class="niv hog">HÖG</td>
-            <td>Äggklocka. Beslutet är inte förhandlingsbart.</td>
+            <td data-label="Risk">Ingen vill lämna minigrävaren</td>
+            <td class="niv hog" data-label="Sannolikhet">HÖG</td>
+            <td data-label="Åtgärd">Äggklocka. Beslutet är inte förhandlingsbart.</td>
           </tr>
           <tr>
             <td>R2</td>
-            <td>"Jag har en bättre metod"-diskussioner</td>
-            <td class="niv hog">HÖG</td>
-            <td>Beställaren har alltid rätt. Beställarens fru har alltid mer rätt.</td>
+            <td data-label="Risk">"Jag har en bättre metod"-diskussioner</td>
+            <td class="niv hog" data-label="Sannolikhet">HÖG</td>
+            <td data-label="Åtgärd">Beställaren har alltid rätt. Beställarens fru har alltid mer rätt.</td>
           </tr>
           <tr>
             <td>R3</td>
-            <td>Regn</td>
-            <td class="niv">MEDEL</td>
-            <td>Vi bygger ändå. Mer fika sätts in.</td>
+            <td data-label="Risk">Regn</td>
+            <td class="niv" data-label="Sannolikhet">MEDEL</td>
+            <td data-label="Åtgärd">Vi bygger ändå. Mer fika sätts in.</td>
           </tr>
           <tr>
             <td>R4</td>
-            <td>Det blir så trevligt att trallen inte blir klar</td>
-            <td class="niv hog">HÖG</td>
-            <td>Accepteras. Det är liksom hela poängen.</td>
+            <td data-label="Risk">Det blir så trevligt att trallen inte blir klar</td>
+            <td class="niv hog" data-label="Sannolikhet">HÖG</td>
+            <td data-label="Åtgärd">Accepteras. Det är liksom hela poängen.</td>
           </tr>
           <tr>
             <td>R5</td>
-            <td>Barnen vill också köra minigrävaren</td>
-            <td class="niv hog">HÖG</td>
-            <td>Förarintyg utfärdas endast till vuxna. Glass sätts in som kompensationsåtgärd.</td>
+            <td data-label="Risk">Barnen vill också köra minigrävaren</td>
+            <td class="niv hog" data-label="Sannolikhet">HÖG</td>
+            <td data-label="Åtgärd">Förarintyg utfärdas endast till vuxna. Glass sätts in som kompensationsåtgärd.</td>
           </tr>
         </tbody>
       </table>
