@@ -262,6 +262,8 @@ table.risk td:first-child{font-family:"IBM Plex Mono",ui-monospace,monospace;fon
 }
 .osa-falt:focus{outline:2px solid var(--gul);outline-offset:0}
 .osa-falt::placeholder{color:#9a958688}
+textarea.osa-falt{min-height:62px;resize:vertical;line-height:1.5}
+select.osa-falt{cursor:pointer}
 .osa-tack{
   margin-top:12px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
   font-weight:600;color:#1e7d3a;line-height:1.6;
@@ -940,17 +942,28 @@ body.redigerar .redigera-hint{display:block}
               <button type="button" class="chip" data-ap="AP6 Trallmontage">AP6 Trall</button>
               <button type="button" class="chip" data-ap="Moraliskt stöd &amp; hejarramsor">Moraliskt stöd &amp; hejarramsor</button>
             </div>
-            <p class="chiplabel">Vem är det ifrån?</p>
-            <input class="osa-falt" type="text" name="Namn" id="osaNamn" placeholder="Ditt namn" autocomplete="name" required="">
+            <p class="chiplabel">Vem anmäler bygglaget?</p>
+            <input class="osa-falt" type="text" name="Namn" id="osaNamn" placeholder="Ditt namn (lagkapten)" autocomplete="name" required="">
+            <p class="chiplabel">Vilka mer ingår i bygglaget? (valfritt)</p>
+            <textarea class="osa-falt" name="Medfoljande" id="osaMedfoljande" rows="2" placeholder="T.ex. Anna – sidoentreprenör · Måns 6 år – praktikant (avlönas i glass) · hunden Bruno – kvalitetskontrollant"></textarea>
+            <p class="chiplabel">Antal munnar att mätta vid grillen</p>
+            <select class="osa-falt" name="Antal" id="osaAntal">
+              <option value="1 – ensamseglare">1 – ensamseglare</option>
+              <option value="2 – par i brott">2 – par i brott</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5+ – helt arbetslag">5+ – helt arbetslag</option>
+            </select>
+            <p class="chiplabel">Kontakt</p>
             <input class="osa-falt" type="text" name="Kontakt" id="osaKontakt" placeholder="Mobil eller mejl (valfritt)" autocomplete="off">
             <input type="hidden" name="Dagar" id="osaDagar">
             <input type="hidden" name="Arbetspaket" id="osaAP">
             <input type="hidden" name="_subject" value="Byggardag OSA">
             <input type="hidden" name="_template" value="table">
             <input type="hidden" name="_captcha" value="false">
-            <button class="knapp" type="submit" id="skickaOsa">Skicka mitt OSA</button>
+            <button class="knapp" type="submit" id="skickaOsa">Anmäl vårt bygglag</button>
             <span class="kopierat" id="osaStatus" hidden=""></span>
-            <p class="osa-tack" id="osaTack" hidden="">Tack — ditt svar är skickat ✓<br>Vi ses på byggardagen! 🛠️</p>
+            <p class="osa-tack" id="osaTack" hidden="">Tack — bygglaget är anmält ✓<br>Vi ses på byggardagen! 🛠️</p>
           </form>
         </div>
       </div>
@@ -1054,6 +1067,8 @@ body.redigerar .redigera-hint{display:block}
   var form = document.getElementById('osaForm');
   if (!form) return;
   var namnInput = document.getElementById('osaNamn');
+  var medfInput = document.getElementById('osaMedfoljande');
+  var antalSelect = document.getElementById('osaAntal');
   var kontaktInput = document.getElementById('osaKontakt');
   var dagarInput = document.getElementById('osaDagar');
   var apInput = document.getElementById('osaAP');
@@ -1097,6 +1112,8 @@ body.redigerar .redigera-hint{display:block}
         _subject: 'Byggardag OSA: ' + namn,
         _template: 'table',
         Namn: namn,
+        Medföljande: (medfInput.value || '').trim() || '—',
+        Antal: antalSelect.value,
         Kontakt: (kontaktInput.value || '').trim() || '—',
         Dagar: dagarInput.value,
         Arbetspaket: apInput.value
